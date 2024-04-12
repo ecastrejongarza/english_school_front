@@ -1,6 +1,4 @@
 import "./App.css";
-import "bootstrap/dist/css/bootstrap.min.css";
-import "bootstrap/dist/js/bootstrap.bundle.min";
 import { AuthProvider } from "./components/auth/AuthProvider";
 import { Routes, Route } from "react-router-dom";
 import Home from "./components/home/Home";
