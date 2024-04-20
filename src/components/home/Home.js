@@ -8,6 +8,8 @@ import FacebookIcon from "@mui/icons-material/Facebook";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import logo from "../logo/logo.png";
 
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+
 const useStyles = makeStyles((theme) => ({
   root: {
     flexGrow: 1,

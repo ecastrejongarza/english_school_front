@@ -18,14 +18,12 @@ const NavBar = () => {
   useEffect(() => {
     if (user) {
       setIsLoggedIn(true);
-      setUserRole(localStorage.getItem("userRole"));
+      setUserRole(localStorage.getItem("rol"));
     } else {
       setIsLoggedIn(false);
       setUserRole("");
     }
   }, [user]);
-
-  console.log(userRole);
 
   return (
     <nav className="navbar navbar-expand-lg bg-body-tertiary px-5 shadow mt-5 sticky-top">
