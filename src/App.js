@@ -8,6 +8,10 @@ import Logout from "./components/auth/Logout";
 import Alumnos from "./components/alumnos/Alumnos";
 import Comentarios from "./components/alumnos/Comentarios";
 import Maestros from "./components/maestros/Maestros";
+import LoginFirebase from "./components/auth/LoginFirebase";
+import "../node_modules/bootstrap/dist/css/bootstrap.min.css";
+import "/node_modules/bootstrap/dist/js/bootstrap.min.js";
+import AlumnosFirebase from "./components/alumnos/AlumnosFirebase";
 
 function App() {
   return (
@@ -17,9 +21,9 @@ function App() {
           <Navbar />
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
+            <Route path="/login" element={<LoginFirebase />} />
             <Route path="/logout" element={<Logout />} />
-            <Route path="/admin/alumnos" element={<Alumnos />} />
+            <Route path="/admin/alumnos" element={<AlumnosFirebase />} />
             <Route path="/admin/comentarios/:id" element={<Comentarios />} />
             <Route path="/admin/maestros" element={<Maestros />} />
             <Route path="/master/alumnos" element={<Alumnos />} />

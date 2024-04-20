@@ -1,9 +1,14 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { jwtDecode } from "jwt-decode";
+import { doc, getDoc, getFirestore } from "@firebase/firestore";
+import { app } from "../../firebase/firebase";
+import { getInfo } from "../utils/Apifunctions";
+
+const firestore = getFirestore(app);
 
 export const AuthContext = createContext({
   user: null,
-  handleLogin: (token) => {},
+  handleLogin: (uid) => {},
   handleLogout: () => {},
 });
 
@@ -12,24 +17,44 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     // Intenta recuperar los datos del usuario del localStorage al cargar la página
-    const storedUserData = localStorage.getItem("userId");
+    const storedUserData = localStorage.getItem("uid");
+
     if (storedUserData) {
-      setUser(JSON.parse(storedUserData));
+      setUser(storedUserData);
     }
   }, []);
 
-  const handleLogin = (token) => {
+  /*const handleLogin = (token) => {
     const decodedUser = jwtDecode(token);
     localStorage.setItem("userId", decodedUser.sub);
     localStorage.setItem("userRole", decodedUser.rol);
     localStorage.setItem("token", token);
     setUser(decodedUser);
+  };*/
+
+  //llenar localStorage con la info del usuario
+  const handleLogin = async (uid) => {
+    // Obtener información adicional del usuario
+    const userInfo = await getInfo(uid);
+
+    // Actualizar el estado del usuario con el ID de usuario
+    setUser(uid);
+
+    if (userInfo) {
+      // Almacenar información adicional del usuario en el almacenamiento local
+      localStorage.setItem("uid", uid);
+      localStorage.setItem("rol", userInfo.rol);
+      localStorage.setItem("nombre", userInfo.nombre);
+    } else {
+      // Manejar el caso en que no se pueda obtener la información del usuario
+      console.error("Unable to fetch user info");
+    }
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("userId");
-    localStorage.removeItem("userRole");
-    localStorage.removeItem("token");
+    localStorage.removeItem("rol");
+    localStorage.removeItem("nombre");
+    localStorage.removeItem("uid");
     setUser(null);
   };
 

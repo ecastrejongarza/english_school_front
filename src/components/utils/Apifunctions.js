@@ -1,5 +1,9 @@
-import axios from "axios";
+import { doc, getDoc, getFirestore } from "@firebase/firestore";
+import { app } from "../../firebase/firebase";
 
+import axios from "axios";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+const firestore = getFirestore(app);
 export const api = axios.create({
   baseURL: "http://localhost:8080",
 });
@@ -35,3 +39,23 @@ export async function getAllAlumnsADMIN() {
     }
   } catch (error) {}
 }
+
+export async function getInfo(uid) {
+  try {
+    const docuRef = doc(firestore, `usuarios/${uid}`);
+    const docuCifrada = await getDoc(docuRef);
+    const userData = {
+      rol: docuCifrada.data().rol,
+      nombre: docuCifrada.data().nombre,
+      uid: uid,
+    };
+    return userData;
+  } catch (error) {
+    console.error("Error fetching user info:", error);
+    return null;
+  }
+}
+
+export const doCreateUserWithEmailAndPassword = async (email, password) => {
+  return createUserWithEmailAndPassword(firestore, email, password);
+};
