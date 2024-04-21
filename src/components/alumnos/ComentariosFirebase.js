@@ -4,6 +4,23 @@ import axios from "axios";
 import React, { useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { AuthContext, useAuth } from "../auth/AuthProvider";
+import {
+  collection,
+  getDocs,
+  getFirestore,
+  query,
+  where,
+  doc,
+  setDoc,
+  orderBy,
+  limit,
+  Timestamp,
+  updateDoc,
+} from "firebase/firestore";
+import { app } from "../../firebase/firebase";
+import { createUserWithEmailAndPassword, getAuth } from "firebase/auth";
+import { format } from "date-fns";
+const firebase = getAuth(app);
 
 //estilo para modal
 const useStyles = makeStyles((theme) => ({
@@ -38,7 +55,7 @@ const AdminComentarios = () => {
   const [comentarioSeleccionado, setComentarioSeleccionado] = useState({
     username: params.id,
     comentario: "",
-    idMaestro: localStorage.getItem("userId"),
+    idMaestro: localStorage.getItem("id"),
   });
   const auth = useAuth();
 
@@ -48,30 +65,29 @@ const AdminComentarios = () => {
 
   //Obtener comentarios por alumno
   const fetchApi = async () => {
-    //validar token antes de hacer la consulta
-    const token = localStorage.getItem("token");
-    if (!token) {
-      window.location.href = "/login";
-      return;
-    }
-
-    // Verificar la expiración del token
-    const tokenExpiration = auth.getTokenExpiration(token);
-    if (tokenExpiration < Date.now()) {
-      // El token ha expirado
-      auth.handleExpiredToken();
-      return;
-    }
+    
     try {
-      const url = `http://localhost:8080/admin/comentarios/${params.id}`;
-      const response = await axios.get(url, {
-        headers: {
-          Authorization: "Bearer " + localStorage.getItem("token"),
-        },
+      const db = getFirestore(app);
+      // Establece una referencia a la colección que deseas consultar
+      const registrosRef = collection(db, "comentarios");
+
+      // Construir una consulta que filtre los registros en función de un campo específico
+      const filtroQuery = query(
+        registrosRef,
+        where("idAlumno", "==", params.id),
+        orderBy("fecha", "asc")
+      );
+
+      // Ejecuta la consulta para obtener todos los documentos de esa colección
+      const querySnapshot = await getDocs(filtroQuery);
+      // Procesa los resultados de la consulta y almacénalos en el estado
+      const listaRegistros = [];
+      querySnapshot.forEach((doc) => {
+        // Agrega el ID del documento a los datos
+        listaRegistros.push({ id: doc.id, ...doc.data() });
       });
-      console.log(response.data);
       //const responseJSON = await response.json();
-      setComentarios(response.data);
+      setComentarios(listaRegistros);
       console.log(comentario);
     } catch (error) {
       console.log(error);
@@ -119,28 +135,28 @@ const AdminComentarios = () => {
   );
 
   const peticionPost = async () => {
-    //validar token antes de hacer la consulta
-    const token = localStorage.getItem("token");
-    if (!token) {
-      window.location.href = "/login";
-      return;
-    }
-
-    // Verificar la expiración del token
-    const tokenExpiration = auth.getTokenExpiration(token);
-    if (tokenExpiration < Date.now()) {
-      // El token ha expirado
-      auth.handleExpiredToken();
-      return;
-    }
+    
 
     try {
-      const url = `http://localhost:8080/admin/comentarios`;
-      const result = await axios.post(url, comentarioSeleccionado, {
-        headers: {
-          Authorization: "Bearer " + localStorage.getItem("token"),
-        },
+      const firestore = getFirestore(app);
+      const db = getFirestore(app);
+      // Obtener la colección de alumnos
+      const alumnosRef = collection(db, "comentarios");
+      // Suponiendo que Timestamp es la clase de fecha y hora de Firestore
+      const timestamp = Timestamp.now(); // Obtener una instancia de Timestamp
+      const date = timestamp.toDate(); // Convertir el Timestamp a un objeto Date
+
+      // Ahora puedes formatear la fecha utilizando la biblioteca que estés utilizando, como date-fns
+      const formattedDate = format(date, "dd/MM/yy");
+
+      const docuRef = doc(firestore, `comentarios/${params.id}`);
+      await setDoc(docuRef, {
+        fecha: formattedDate,
+        comentario: comentarioSeleccionado.comentario,
+        idMaestro: localStorage.getItem("uid"),
+        idAlumno: params.id
       });
+
       abrirCerrarModalInsertar();
       fetchApi();
     } catch (error) {
@@ -156,7 +172,7 @@ const AdminComentarios = () => {
   return (
     <div>
       <h1>Comentarios</h1>
-      <Button onClick={() => abrirCerrarModalInsertar()}>
+      <Button variant="outlined" onClick={() => abrirCerrarModalInsertar()}>
         Insertar comentario
       </Button>
       <div class="container" id="tabla">
@@ -175,7 +191,7 @@ const AdminComentarios = () => {
               : comentario.map((comentarios, i) => {
                   return (
                     <tr key={i}>
-                      <td>{comentarios.username}</td>
+                      <td>{comentarios.idAlumno}</td>
                       <td>{comentarios.fecha}</td>
                       <td>{comentarios.comentario}</td>
                       <td>{comentarios.idMaestro}</td>

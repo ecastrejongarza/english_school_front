@@ -42,8 +42,9 @@ export const AuthProvider = ({ children }) => {
 
     if (userInfo) {
       // Almacenar información adicional del usuario en el almacenamiento local
+      console.log("userInfo "+ userInfo)
       localStorage.setItem("uid", uid);
-      localStorage.setItem("rol", userInfo.rol);
+      localStorage.setItem("role", userInfo.role);
       localStorage.setItem("nombre", userInfo.nombre);
     } else {
       // Manejar el caso en que no se pueda obtener la información del usuario

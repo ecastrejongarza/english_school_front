@@ -45,7 +45,7 @@ export async function getInfo(uid) {
     const docuRef = doc(firestore, `usuarios/${uid}`);
     const docuCifrada = await getDoc(docuRef);
     const userData = {
-      rol: docuCifrada.data().rol,
+      role: docuCifrada.data().role,
       nombre: docuCifrada.data().nombre,
       uid: uid,
     };

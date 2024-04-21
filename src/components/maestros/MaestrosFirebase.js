@@ -17,6 +17,23 @@ import { NavLink } from "react-router-dom";
 import axios from "axios";
 import { getAllAlumnsADMIN } from "../utils/Apifunctions";
 import { AuthContext, useAuth } from "../auth/AuthProvider";
+import {
+  collection,
+  getDocs,
+  getFirestore,
+  query,
+  where,
+  doc,
+  setDoc,
+  orderBy,
+  limit,
+  Timestamp,
+  updateDoc,
+} from "firebase/firestore";
+import { app } from "../../firebase/firebase";
+import { createUserWithEmailAndPassword, getAuth } from "firebase/auth";
+import { format } from "date-fns";
+const firebase = getAuth(app);
 
 //estilo para modal
 const useStyles = makeStyles((theme) => ({
@@ -51,7 +68,7 @@ const Maestros = () => {
     materno: "",
     telefono: "",
     email: "",
-    role: "1",
+    role: "MASTER",
     password: "",
   });
   const [activo, setActivo] = useState({
@@ -71,8 +88,6 @@ const Maestros = () => {
   //asignar valor de cada campo para agregar el comentario
   const handleChange = (e) => {
     const { name, value } = e.target;
-    console.log(name);
-    console.log(value);
     setmaestroNuevo((prevState) => ({
       ...prevState,
       [name]: value,
@@ -81,34 +96,33 @@ const Maestros = () => {
 
   //mostrar maestros activos o inactivos
   const handleActiveInactive = async (e) => {
-    //validar token antes de hacer la consulta
-    const token = localStorage.getItem("token");
-    if (!token) {
-      window.location.href = "/login";
-      return;
-    }
-
-    // Verificar la expiración del token
-    const tokenExpiration = auth.getTokenExpiration(token);
-    if (tokenExpiration < Date.now()) {
-      // El token ha expirado
-      auth.handleExpiredToken();
-      return;
-    }
+    
     const { name, value } = e.target;
-    console.log(name);
-    console.log(value);
+    
     setValue(value);
     const rol = "1";
     try {
-      const url = `http://localhost:8080/admin/${rol}/${value}`;
-      const response = await axios.get(url, {
-        headers: {
-          Authorization: "Bearer " + localStorage.getItem("token"),
-        },
+      const db = getFirestore(app);
+      // Establece una referencia a la colección que deseas consultar
+      const registrosRef = collection(db, "usuarios");
+
+      // Construir una consulta que filtre los registros en función de un campo específico
+      const filtroQuery = query(
+        registrosRef,
+        where("role", "==", "MASTER"),
+        where("activo", "==", value),
+        orderBy("username", "asc")
+      );
+
+      // Ejecuta la consulta para obtener todos los documentos de esa colección
+      const querySnapshot = await getDocs(filtroQuery);
+      // Procesa los resultados de la consulta y almacénalos en el estado
+      const listaRegistros = [];
+      querySnapshot.forEach((doc) => {
+        // Agrega el ID del documento a los datos
+        listaRegistros.push({ id: doc.id, ...doc.data() });
       });
-      console.log(response);
-      setMaestros(response.data);
+      setMaestros(listaRegistros);
     } catch (error) {
       setSuccessMessage("");
       setErrorMessage(`Error fetching data : ${error.message}`);
@@ -118,57 +132,98 @@ const Maestros = () => {
 
   //Obtener maestros
   const fetchApi = async () => {
-    //validar token antes de hacer la consulta
-    const token = localStorage.getItem("token");
-    if (!token) {
-      window.location.href = "/login";
-      return;
-    }
-
-    // Verificar la expiración del token
-    const tokenExpiration = auth.getTokenExpiration(token);
-    if (tokenExpiration < Date.now()) {
-      // El token ha expirado
-      auth.handleExpiredToken();
-      return;
-    }
+    
     try {
-      const rol = "MASTER";
-      const url = `http://localhost:8080/admin/all/${rol}`;
-      const response = await axios.get(url, {
-        headers: {
-          Authorization: "Bearer " + localStorage.getItem("token"),
-        },
+      const db = getFirestore(app);
+      // Establece una referencia a la colección que deseas consultar
+      const registrosRef = collection(db, "usuarios");
+
+      // Construir una consulta que filtre los registros en función de un campo específico
+      const filtroQuery = query(
+        registrosRef,
+        where("role", "==", "MASTER"),
+        where("activo", "==", "1"),
+        orderBy("username", "asc")
+      );
+
+      // Ejecuta la consulta para obtener todos los documentos de esa colección
+      const querySnapshot = await getDocs(filtroQuery);
+      // Procesa los resultados de la consulta y almacénalos en el estado
+      const listaRegistros = [];
+      querySnapshot.forEach((doc) => {
+        // Agrega el ID del documento a los datos
+        listaRegistros.push({ id: doc.id, ...doc.data() });
       });
-      //const responseJSON = await response;
-      setMaestros(response.data);
+      setMaestros(listaRegistros);
     } catch (error) {
       console.error("Error fetching data:", error);
     }
   };
 
   const peticionPost = async () => {
-    //validar token antes de hacer la consulta
-    const token = localStorage.getItem("token");
-    if (!token) {
-      window.location.href = "/login";
-      return;
-    }
-
-    // Verificar la expiración del token
-    const tokenExpiration = auth.getTokenExpiration(token);
-    if (tokenExpiration < Date.now()) {
-      // El token ha expirado
-      auth.handleExpiredToken();
-      return;
-    }
-
     try {
-      const url = `http://localhost:8080/registrar`;
-      const result = await axios.post(url, maestroNuevo, {
-        headers: {
-          Authorization: "Bearer " + localStorage.getItem("token"),
-        },
+      const firestore = getFirestore(app);
+      const db = getFirestore(app);
+      // Obtener la colección de alumnos
+      const maestrosRef = collection(db, "usuarios");
+
+      let ultimoMaestro;
+      const filtro = query(
+        maestrosRef,
+        where("role", "==", "MASTER"),
+        orderBy("username", "desc"),
+        limit(1)
+      );
+
+      const ultimoMaestroQuery = await getDocs(filtro);
+      if (ultimoMaestroQuery.docs.length > 0) {
+        const ultimoMaestroData = ultimoMaestroQuery.docs[0].data();
+        // Asignar el valor a ultimoMaestro
+        ultimoMaestro = ultimoMaestroData;
+        // Resto del código para manejar el último alumno
+      } else {
+        console.log("No se encontraron documentos");
+        // Si no hay documentos, podrías asignar un valor predeterminado a ultimoMaestro
+        ultimoMaestro = null; // o cualquier otro valor predeterminado que desees
+      }
+
+      // Ahora puedes acceder a las propiedades de ultimoMaestro de forma segura
+      const ultimoUsername = ultimoMaestro ? ultimoMaestro.username : null;
+
+      let nuevoUsername;
+      // Generar el nuevo username incrementando el último en 1
+      if(ultimoUsername === null){
+      nuevoUsername =
+        "M001"
+      }else{
+      nuevoUsername =
+        "M" +
+        (parseInt(ultimoUsername.substring(1)) + 1).toString().padStart(3, "0");
+      }
+      // Suponiendo que Timestamp es la clase de fecha y hora de Firestore
+      const timestamp = Timestamp.now(); // Obtener una instancia de Timestamp
+      const date = timestamp.toDate(); // Convertir el Timestamp a un objeto Date
+
+      // Ahora puedes formatear la fecha utilizando la biblioteca que estés utilizando, como date-fns
+      const formattedDate = format(date, "dd/MM/yy");
+
+      const infoUsuario = await createUserWithEmailAndPassword(
+        firebase,
+        maestroNuevo.email,
+        maestroNuevo.password
+      );
+      const docuRef = doc(firestore, `usuarios/${infoUsuario.user.uid}`);
+      await setDoc(docuRef, {
+        email: maestroNuevo.email,
+        role: maestroNuevo.role,
+        nombre: maestroNuevo.nombre,
+        paterno: maestroNuevo.paterno,
+        materno: maestroNuevo.materno,
+        telefono: maestroNuevo.telefono,
+        password: maestroNuevo.password,
+        username: nuevoUsername,
+        fecha_inscripcion: formattedDate,
+        activo: "1",
       });
       fetchApi();
       // Close the modal
@@ -185,43 +240,19 @@ const Maestros = () => {
 
   // Función para manejar el cambio de estado del checkbox de un maestro
   const handleCheckboxChange = async (id, checked) => {
-    //validar token antes de hacer la consulta
-    const token = localStorage.getItem("token");
-    if (!token) {
-      window.location.href = "/login";
-      return;
-    }
-
-    // Verificar la expiración del token
-    const tokenExpiration = auth.getTokenExpiration(token);
-    if (tokenExpiration < Date.now()) {
-      // El token ha expirado
-      auth.handleExpiredToken();
-      return;
-    }
-
     setActivo(checked ? 1 : 0);
 
-    const url = `http://localhost:8080/admin/${id}`;
-    // Realizar la solicitud de actualización al backend
-    const requestOptions = {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        activo: checked ? 1 : 0,
-      }),
-    };
-
     try {
-      const response = await fetch(url, requestOptions);
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-      const data = await response.json();
-      //fetchApi();
+      const db = getFirestore(app);
+      // Obtener la colección de alumnos
+      const maestrosRef = doc(db, "usuarios", id);
+
+     const active = value === "1" ?{ "activo" : "0"} : { "activo" : "1"} 
+     console.log(value)
+     console.log(typeof value)
+     console.log(active)
+      const actualizaEstado = await updateDoc(maestrosRef, active);
+      console.log(actualizaEstado);
     } catch (error) {
       console.log("Error al enviar la actualización al backend:", error);
     }
@@ -241,7 +272,7 @@ const Maestros = () => {
   //cargar rol de usuario
   useEffect(() => {
     if (user) {
-      setUserRole(localStorage.getItem("userRole"));
+      setUserRole(localStorage.getItem("role"));
     } else {
       setUserRole("");
     }
@@ -343,7 +374,7 @@ const Maestros = () => {
       {successMessage && (
         <p className="alert alert-success">{successMessage}</p>
       )}
-      <div class="container" id="tabla">
+      <div className="container" id="tabla">
         <table className="table table-striped">
           <thead className="table-dark">
             <tr>

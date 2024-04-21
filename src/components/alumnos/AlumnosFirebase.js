@@ -93,8 +93,6 @@ const AlumnosFirebase = () => {
   //asignar valor de cada campo para agregar el comentario
   const handleChange = (e) => {
     const { name, value } = e.target;
-    console.log(name);
-    console.log(value);
     setAlumnoNuevo((prevState) => ({
       ...prevState,
       [name]: value,
@@ -104,8 +102,6 @@ const AlumnosFirebase = () => {
   //mostrar alumnos activos o inactivos
   const handleActiveInactive = async (e) => {
     const { name, value } = e.target;
-    console.log(name);
-    console.log(value);
     setValue(value);
     //cambiar value a string
     if (value === 1) {
@@ -222,8 +218,6 @@ const AlumnosFirebase = () => {
         alumnoNuevo.email,
         alumnoNuevo.password
       );
-      console.log("entra2");
-      console.log(infoUsuario.user.uid);
       const docuRef = doc(firestore, `usuarios/${infoUsuario.user.uid}`);
       await setDoc(docuRef, {
         email: alumnoNuevo.email,
@@ -264,7 +258,10 @@ const AlumnosFirebase = () => {
       // Obtener la colección de alumnos
       const alumnosRef = doc(db, "usuarios", id);
 
-     const active = alumno.activo === 1 ?{ "activo" : "0"} : { "activo" : "1"} 
+     const active = value === "1" ?{ "activo" : "0"} : { "activo" : "1"} 
+     console.log(value)
+     console.log(typeof value)
+     console.log(active)
       const actualizaEstado = await updateDoc(alumnosRef, active);
       console.log(actualizaEstado);
     } catch (error) {
@@ -286,7 +283,7 @@ const AlumnosFirebase = () => {
   //cargar rol de usuario
   useEffect(() => {
     if (user) {
-      setUserRole(localStorage.getItem("rol"));
+      setUserRole(localStorage.getItem("role"));
     } else {
       setUserRole("");
     }
@@ -425,7 +422,7 @@ const AlumnosFirebase = () => {
               <th>Apellido materno</th>
               <th>Teléfono</th>
               <th>Email</th>
-              <th>Fecha de inscripción</th>
+              {userRole === "ADMIN" && <th>Fecha de inscripción</th>}
               {userRole === "ADMIN" && <th>Activo</th>}
             </tr>
           </thead>
@@ -458,7 +455,7 @@ const AlumnosFirebase = () => {
                       <td>{alumnos.materno}</td>
                       <td>{alumnos.telefono}</td>
                       <td>{alumnos.email}</td>
-                      <td>{alumnos.fechaInscripcion}</td>
+                      {userRole === "ADMIN" && (<td>{alumnos.fechaInscripcion}</td>)}
                       {userRole === "ADMIN" && (
                         <td>
                           <FormControlLabel

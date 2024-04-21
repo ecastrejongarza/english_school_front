@@ -18,15 +18,15 @@ const NavBar = () => {
   useEffect(() => {
     if (user) {
       setIsLoggedIn(true);
-      setUserRole(localStorage.getItem("rol"));
+      setUserRole(localStorage.getItem("role"));
     } else {
       setIsLoggedIn(false);
       setUserRole("");
     }
   }, [user]);
-
+console.log(userRole)
   return (
-    <nav className="navbar navbar-expand-lg bg-body-tertiary px-5 shadow mt-5 sticky-top">
+    <nav className="navbar navbar-expand-lg bg-body-tertiary px-5 shadow mt-1 sticky-top">
       <div className="container-fluid">
         <Link to={"/"} className="navbar-brand">
           <img
