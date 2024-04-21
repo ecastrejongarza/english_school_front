@@ -258,24 +258,14 @@ const AlumnosFirebase = () => {
   // Función para manejar el cambio de estado del checkbox de un alumno
   const handleCheckboxChange = async (id, checked) => {
     setActivo(checked ? 1 : 0);
-    console.log(typeof activo);
-
-    const url = `http://localhost:8080/admin/${id}`;
-
+  
     try {
       const db = getFirestore(app);
       // Obtener la colección de alumnos
       const alumnosRef = doc(db, "usuarios", id);
 
-      let active;
-      if (activo === 1) {
-        active = "1";
-      } else {
-        active = "0";
-      }
-      const actualizaEstado = await updateDoc(alumnosRef, {
-        activo: active,
-      });
+     const active = alumno.activo === 1 ?{ "activo" : "0"} : { "activo" : "1"} 
+      const actualizaEstado = await updateDoc(alumnosRef, active);
       console.log(actualizaEstado);
     } catch (error) {
       console.log("Error al enviar la actualización al backend:", error);
@@ -296,7 +286,7 @@ const AlumnosFirebase = () => {
   //cargar rol de usuario
   useEffect(() => {
     if (user) {
-      setUserRole(localStorage.getItem("userRole"));
+      setUserRole(localStorage.getItem("rol"));
     } else {
       setUserRole("");
     }
