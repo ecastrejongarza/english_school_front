@@ -101,171 +101,207 @@ const AlumnosFirebase = () => {
 
   //mostrar alumnos activos o inactivos
   const handleActiveInactive = async (e) => {
-    const { name, value } = e.target;
-    setValue(value);
-    //cambiar value a string
-    if (value === 1) {
-      setValor("1");
+    //validar uid antes de hacer la consulta
+    const uid = localStorage.getItem("uid");
+    if (!uid) {
+      window.location.href = "/login";
+      return;
     } else {
-      setValor("0");
-    }
-    try {
-      const db = getFirestore(app);
-      // Establece una referencia a la colección que deseas consultar
-      const registrosRef = collection(db, "usuarios");
+      const { name, value } = e.target;
+      setValue(value);
+      //cambiar value a string
+      if (value === 1) {
+        setValor("1");
+      } else {
+        setValor("0");
+      }
+      try {
+        const db = getFirestore(app);
+        // Establece una referencia a la colección que deseas consultar
+        const registrosRef = collection(db, "usuarios");
 
-      // Construir una consulta que filtre los registros en función de un campo específico
-      const filtroQuery = query(
-        registrosRef,
-        where("role", "==", "ALUMN"),
-        where("activo", "==", value),
-        orderBy("username", "asc")
-      );
+        // Construir una consulta que filtre los registros en función de un campo específico
+        const filtroQuery = query(
+          registrosRef,
+          where("role", "==", "ALUMN"),
+          where("activo", "==", value),
+          orderBy("username", "asc")
+        );
 
-      // Ejecuta la consulta para obtener todos los documentos de esa colección
-      const querySnapshot = await getDocs(filtroQuery);
-      // Procesa los resultados de la consulta y almacénalos en el estado
-      const listaRegistros = [];
-      querySnapshot.forEach((doc) => {
-        // Agrega el ID del documento a los datos
-        listaRegistros.push({ id: doc.id, ...doc.data() });
-      });
-      setAlumnos(listaRegistros);
-    } catch (error) {
-      setSuccessMessage("");
-      setErrorMessage(`Error fetching data : ${error.message}`);
-      console.error("Error fetching data:", error);
+        // Ejecuta la consulta para obtener todos los documentos de esa colección
+        const querySnapshot = await getDocs(filtroQuery);
+        // Procesa los resultados de la consulta y almacénalos en el estado
+        const listaRegistros = [];
+        querySnapshot.forEach((doc) => {
+          // Agrega el ID del documento a los datos
+          listaRegistros.push({ id: doc.id, ...doc.data() });
+        });
+        setAlumnos(listaRegistros);
+      } catch (error) {
+        setSuccessMessage("");
+        setErrorMessage(`Error fetching data : ${error.message}`);
+        console.error("Error fetching data:", error);
+      }
     }
   };
 
   //Obtener alumnos
   const fetchApi = async () => {
-    try {
-      const db = getFirestore(app);
-      // Establece una referencia a la colección que deseas consultar
-      const registrosRef = collection(db, "usuarios");
+    //validar uid antes de hacer la consulta
+    const uid = localStorage.getItem("uid");
+    if (!uid) {
+      window.location.href = "/login";
+      return;
+    } else {
+      try {
+        const db = getFirestore(app);
+        // Establece una referencia a la colección que deseas consultar
+        const registrosRef = collection(db, "usuarios");
 
-      // Construir una consulta que filtre los registros en función de un campo específico
-      const filtroQuery = query(
-        registrosRef,
-        where("role", "==", "ALUMN"),
-        where("activo", "==", "1"),
-        orderBy("username", "asc")
-      );
+        // Construir una consulta que filtre los registros en función de un campo específico
+        const filtroQuery = query(
+          registrosRef,
+          where("role", "==", "ALUMN"),
+          where("activo", "==", "1"),
+          orderBy("username", "asc")
+        );
 
-      // Ejecuta la consulta para obtener todos los documentos de esa colección
-      const querySnapshot = await getDocs(filtroQuery);
-      // Procesa los resultados de la consulta y almacénalos en el estado
-      const listaRegistros = [];
-      querySnapshot.forEach((doc) => {
-        // Agrega el ID del documento a los datos
-        listaRegistros.push({ id: doc.id, ...doc.data() });
-      });
-      setAlumnos(listaRegistros);
-    } catch (error) {
-      console.error("Error fetching data:", error);
+        // Ejecuta la consulta para obtener todos los documentos de esa colección
+        const querySnapshot = await getDocs(filtroQuery);
+        // Procesa los resultados de la consulta y almacénalos en el estado
+        const listaRegistros = [];
+        querySnapshot.forEach((doc) => {
+          // Agrega el ID del documento a los datos
+          listaRegistros.push({ id: doc.id, ...doc.data() });
+        });
+        setAlumnos(listaRegistros);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
     }
   };
 
   const peticionPost = async () => {
-    //e.preventDefault();
-    try {
-      const firestore = getFirestore(app);
-      const db = getFirestore(app);
-      // Obtener la colección de alumnos
-      const alumnosRef = collection(db, "usuarios");
+    //validar uid antes de hacer la consulta
+    const uid = localStorage.getItem("uid");
+    if (!uid) {
+      window.location.href = "/login";
+      return;
+    } else {
+      try {
+        const firestore = getFirestore(app);
+        const db = getFirestore(app);
+        // Obtener la colección de alumnos
+        const alumnosRef = collection(db, "usuarios");
 
-      let ultimoAlumno;
-      const filtro = query(
-        alumnosRef,
-        where("role", "==", "ALUMN"),
-        orderBy("username", "desc"),
-        limit(1)
-      );
+        let ultimoAlumno;
+        const filtro = query(
+          alumnosRef,
+          where("role", "==", "ALUMN"),
+          orderBy("username", "desc"),
+          limit(1)
+        );
 
-      const ultimoAlumnoQuery = await getDocs(filtro);
-      console.log(ultimoAlumnoQuery.docs);
-      if (ultimoAlumnoQuery.docs.length > 0) {
-        const ultimoAlumnoData = ultimoAlumnoQuery.docs[0].data();
-        console.log(ultimoAlumnoQuery.docs[0].data());
-        console.log("Datos del último alumno:", ultimoAlumnoData);
-        // Asignar el valor a ultimoAlumno
-        ultimoAlumno = ultimoAlumnoData;
-        // Resto del código para manejar el último alumno
-      } else {
-        console.log("No se encontraron documentos");
-        // Si no hay documentos, podrías asignar un valor predeterminado a ultimoAlumno
-        ultimoAlumno = null; // o cualquier otro valor predeterminado que desees
+        const ultimoAlumnoQuery = await getDocs(filtro);
+        console.log(ultimoAlumnoQuery.docs);
+        if (ultimoAlumnoQuery.docs.length > 0) {
+          const ultimoAlumnoData = ultimoAlumnoQuery.docs[0].data();
+          console.log(ultimoAlumnoQuery.docs[0].data());
+          console.log("Datos del último alumno:", ultimoAlumnoData);
+          // Asignar el valor a ultimoAlumno
+          ultimoAlumno = ultimoAlumnoData;
+          // Resto del código para manejar el último alumno
+        } else {
+          console.log("No se encontraron documentos");
+          // Si no hay documentos, podrías asignar un valor predeterminado a ultimoAlumno
+          ultimoAlumno = null; // o cualquier otro valor predeterminado que desees
+        }
+
+        // Ahora puedes acceder a las propiedades de ultimoAlumno de forma segura
+        const ultimoUsername = ultimoAlumno ? ultimoAlumno.username : null;
+
+        // Generar el nuevo username incrementando el último en 1
+        const nuevoUsername =
+          "A" +
+          (parseInt(ultimoUsername.substring(1)) + 1)
+            .toString()
+            .padStart(3, "0");
+
+        // Suponiendo que Timestamp es la clase de fecha y hora de Firestore
+        const timestamp = Timestamp.now(); // Obtener una instancia de Timestamp
+        const date = timestamp.toDate(); // Convertir el Timestamp a un objeto Date
+
+        // Ahora puedes formatear la fecha utilizando la biblioteca que estés utilizando, como date-fns
+        const formattedDate = format(date, "dd/MM/yy");
+
+        const infoUsuario = await createUserWithEmailAndPassword(
+          firebase,
+          alumnoNuevo.email,
+          alumnoNuevo.password
+        );
+        const docuRef = doc(firestore, `usuarios/${infoUsuario.user.uid}`);
+        await setDoc(docuRef, {
+          email: alumnoNuevo.email,
+          role: alumnoNuevo.role,
+          nombre: alumnoNuevo.nombre,
+          paterno: alumnoNuevo.paterno,
+          materno: alumnoNuevo.materno,
+          telefono: alumnoNuevo.telefono,
+          password: alumnoNuevo.password,
+          username: nuevoUsername,
+          fecha_inscripcion: formattedDate,
+          activo: "1",
+        });
+
+        fetchApi();
+        // Cerrar el modal
+        setModalInsertar(false);
+      } catch (error) {
+        console.log(error);
+        // Mostrar mensaje de error de reCAPTCHA si es necesario
+        setErrorMessage(
+          "Por favor, complete la verificación de reCAPTCHA antes de enviar el formulario."
+        );
       }
-
-      // Ahora puedes acceder a las propiedades de ultimoAlumno de forma segura
-      const ultimoUsername = ultimoAlumno ? ultimoAlumno.username : null;
-
-      // Generar el nuevo username incrementando el último en 1
-      const nuevoUsername =
-        "A" +
-        (parseInt(ultimoUsername.substring(1)) + 1).toString().padStart(3, "0");
-
-      // Suponiendo que Timestamp es la clase de fecha y hora de Firestore
-      const timestamp = Timestamp.now(); // Obtener una instancia de Timestamp
-      const date = timestamp.toDate(); // Convertir el Timestamp a un objeto Date
-
-      // Ahora puedes formatear la fecha utilizando la biblioteca que estés utilizando, como date-fns
-      const formattedDate = format(date, "dd/MM/yy");
-
-      const infoUsuario = await createUserWithEmailAndPassword(
-        firebase,
-        alumnoNuevo.email,
-        alumnoNuevo.password
-      );
-      const docuRef = doc(firestore, `usuarios/${infoUsuario.user.uid}`);
-      await setDoc(docuRef, {
-        email: alumnoNuevo.email,
-        role: alumnoNuevo.role,
-        nombre: alumnoNuevo.nombre,
-        paterno: alumnoNuevo.paterno,
-        materno: alumnoNuevo.materno,
-        telefono: alumnoNuevo.telefono,
-        password: alumnoNuevo.password,
-        username: nuevoUsername,
-        fecha_inscripcion: formattedDate,
-        activo: "1",
-      });
-
-      fetchApi();
-      // Cerrar el modal
-      setModalInsertar(false);
-    } catch (error) {
-      console.log(error);
-      // Mostrar mensaje de error de reCAPTCHA si es necesario
-      setErrorMessage(
-        "Por favor, complete la verificación de reCAPTCHA antes de enviar el formulario."
-      );
     }
   };
 
   //carga comentarios al cargar la pagina
   useEffect(() => {
-    fetchApi();
+    //validar uid antes de hacer la consulta
+    const uid = localStorage.getItem("uid");
+    if (!uid) {
+      window.location.href = "/login";
+      return;
+    } else {
+      fetchApi();
+    }
   }, []);
 
   // Función para manejar el cambio de estado del checkbox de un alumno
   const handleCheckboxChange = async (id, checked) => {
-    setActivo(checked ? 1 : 0);
-  
-    try {
-      const db = getFirestore(app);
-      // Obtener la colección de alumnos
-      const alumnosRef = doc(db, "usuarios", id);
+    //validar uid antes de hacer la consulta
+    const uid = localStorage.getItem("uid");
+    if (!uid) {
+      window.location.href = "/login";
+      return;
+    } else {
+      setActivo(checked ? 1 : 0);
 
-     const active = value === "1" ?{ "activo" : "0"} : { "activo" : "1"} 
-     console.log(value)
-     console.log(typeof value)
-     console.log(active)
-      const actualizaEstado = await updateDoc(alumnosRef, active);
-      console.log(actualizaEstado);
-    } catch (error) {
-      console.log("Error al enviar la actualización al backend:", error);
+      try {
+        const db = getFirestore(app);
+        // Obtener la colección de alumnos
+        const alumnosRef = doc(db, "usuarios", id);
+
+        const active = value === "1" ? { activo: "0" } : { activo: "1" };
+        console.log(value);
+        console.log(typeof value);
+        console.log(active);
+        const actualizaEstado = await updateDoc(alumnosRef, active);
+        console.log(actualizaEstado);
+      } catch (error) {
+        console.log("Error al enviar la actualización al backend:", error);
+      }
     }
     console.log(id + " " + checked);
     setAlumnos(
@@ -282,10 +318,17 @@ const AlumnosFirebase = () => {
 
   //cargar rol de usuario
   useEffect(() => {
-    if (user) {
-      setUserRole(localStorage.getItem("role"));
+    //validar uid antes de hacer la consulta
+    const uid = localStorage.getItem("uid");
+    if (!uid) {
+      window.location.href = "/login";
+      return;
     } else {
-      setUserRole("");
+      if (user) {
+        setUserRole(localStorage.getItem("role"));
+      } else {
+        setUserRole("");
+      }
     }
   }, [user]);
 
@@ -455,7 +498,9 @@ const AlumnosFirebase = () => {
                       <td>{alumnos.materno}</td>
                       <td>{alumnos.telefono}</td>
                       <td>{alumnos.email}</td>
-                      {userRole === "ADMIN" && (<td>{alumnos.fechaInscripcion}</td>)}
+                      {userRole === "ADMIN" && (
+                        <td>{alumnos.fechaInscripcion}</td>
+                      )}
                       {userRole === "ADMIN" && (
                         <td>
                           <FormControlLabel

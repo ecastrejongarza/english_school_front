@@ -24,7 +24,7 @@ const NavBar = () => {
       setUserRole("");
     }
   }, [user]);
-console.log(userRole)
+  console.log(userRole);
   return (
     <nav className="navbar navbar-expand-lg bg-body-tertiary px-5 shadow mt-1 sticky-top">
       <div className="container-fluid">
