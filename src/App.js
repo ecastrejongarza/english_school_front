@@ -10,6 +10,7 @@ import LoginFirebase from "./components/auth/LoginFirebase";
 import "../node_modules/bootstrap/dist/css/bootstrap.min.css";
 import "/node_modules/bootstrap/dist/js/bootstrap.min.js";
 import AlumnosFirebase from "./components/alumnos/AlumnosFirebase";
+import Horarios from "./components/horarios/Horarios";
 
 function App() {
   return (
@@ -22,10 +23,17 @@ function App() {
             <Route path="/login" element={<LoginFirebase />} />
             <Route path="/logout" element={<Logout />} />
             <Route path="/admin/alumnos" element={<AlumnosFirebase />} />
-            <Route path="/admin/comentarios/:id" element={<ComentariosFirebase />} />
+            <Route
+              path="/admin/comentarios/:id"
+              element={<ComentariosFirebase />}
+            />
             <Route path="/admin/maestros" element={<MaestrosFirebase />} />
             <Route path="/master/alumnos" element={<AlumnosFirebase />} />
-            <Route path="/master/comentarios/:id" element={<ComentariosFirebase />} />
+            <Route
+              path="/master/comentarios/:id"
+              element={<ComentariosFirebase />}
+            />
+            <Route path="/admin/horarios" element={<Horarios />} />
           </Routes>
         </div>
       </AuthProvider>
