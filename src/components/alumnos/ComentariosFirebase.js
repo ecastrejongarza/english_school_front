@@ -16,6 +16,7 @@ import {
   limit,
   Timestamp,
   updateDoc,
+  addDoc,
 } from "firebase/firestore";
 import { app } from "../../firebase/firebase";
 import { createUserWithEmailAndPassword, getAuth } from "firebase/auth";
@@ -65,7 +66,6 @@ const AdminComentarios = () => {
 
   //Obtener comentarios por alumno
   const fetchApi = async () => {
-    
     try {
       const db = getFirestore(app);
       // Establece una referencia a la colección que deseas consultar
@@ -135,8 +135,6 @@ const AdminComentarios = () => {
   );
 
   const peticionPost = async () => {
-    
-
     try {
       const firestore = getFirestore(app);
       const db = getFirestore(app);
@@ -149,12 +147,12 @@ const AdminComentarios = () => {
       // Ahora puedes formatear la fecha utilizando la biblioteca que estés utilizando, como date-fns
       const formattedDate = format(date, "dd/MM/yy");
 
-      const docuRef = doc(firestore, `comentarios/${params.id}`);
-      await setDoc(docuRef, {
+      const docuRef = collection(firestore, `comentarios`);
+      await addDoc(docuRef, {
         fecha: formattedDate,
         comentario: comentarioSeleccionado.comentario,
         idMaestro: localStorage.getItem("uid"),
-        idAlumno: params.id
+        idAlumno: params.id,
       });
 
       abrirCerrarModalInsertar();
